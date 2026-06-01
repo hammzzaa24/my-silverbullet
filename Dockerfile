@@ -1,18 +1,21 @@
-# استخدام بيئة تشغيل دوت نت الصافية والخفيفة مباشرة لتقليل استهلاك الرام
-FROM mcr.microsoft.com/dotnet/aspnet:8.0
+# الخطوة الأولى: بيئة بناء كاملة تحتوي على حزم دوت نت ونظام بناء الواجهات
+FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build-env
 WORKDIR /app
 
-# تثبيت أداة wget والـ unzip لجلب وفك حزمة سيلفر بولت الرسمية الجاهزة بالكامل
-RUN apt-get update && apt-get install -y wget unzip && rm -rf /var/lib/apt/lists/*
+# جلب ملفات السورس كود من مستودع نشط ومفتوح
+RUN git clone https://github.com/mohamm4dx/SilverBullet.git .
 
-# تحميل النسخة المجمعة الجاهزة من المطور مباشرة (تحتوي على مجلد wwwroot وكل شيء)
-RUN wget https://github.com/mohamm4dx/SilverBullet/releases/download/v0.3.2/SilverBullet.Web.zip -O silverbullet.zip \
-    && unzip silverbullet.zip -d . \
-    && rm silverbullet.zip
+# الانتقال إلى مجلد واجهة الويب وبناء تطبيق دوت نت مع تجميع ملفات الـ Client-Side
+WORKDIR /app/SilverBullet.Web
+RUN dotnet publish -c Release -o /app/out
 
-# فتح المنفذ الذي تتوقعه منصة Render
+# الخطوة الثانية: بيئة التشغيل الخفيفة والنهائية
+FROM mcr.microsoft.com/dotnet/aspnet:8.0
+WORKDIR /app
+COPY --from=build-env /app/out .
+
+# فتح المنفذ الخاص بمنصة Render
 EXPOSE 5000
 ENV ASPNETCORE_URLS=http://+:5000
 
-# أمر الإقلاع المباشر للملف التنفيذي الأساسي
 ENTRYPOINT ["dotnet", "SilverBullet.Web.dll"]
