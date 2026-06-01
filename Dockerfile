@@ -1,21 +1,21 @@
-# استخدام بيئة تشغيل دوت نت الرسمية والمباشرة
+# استخدام بيئة بناء دوت نت
 FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build-env
 WORKDIR /app
 
-# سحب كود OpenBullet 2 المستقر والمفتوح للجميع علنياً
-RUN git clone https://github.com/openbullet/openbullet2.git .
+# جلب ملفات السورس كود من مستودع SilverBullet الرسمي النشط علناً
+RUN git clone https://github.com/mohamm4dx/SilverBullet.git .
 
-# الانتقال للمجلد الأساسي وبناء نسخة الويب
-WORKDIR /app/OpenBullet2.Web
+# بناء نسخة الويب الخاصة بالبرنامج
+WORKDIR /app/SilverBullet.Web
 RUN dotnet publish -c Release -o /app/out
 
-# بناء الحاوية النهائية الخفيفة للتشغيل
+# بناء الحاوية النهائية للتشغيل
 FROM mcr.microsoft.com/dotnet/aspnet:8.0
 WORKDIR /app
 COPY --from=build-env /app/out .
 
-# فتح المنفذ الافتراضي الذي تتوقعه منصة Render للـ Web UIs
+# فتح المنفذ الذي تتوقعه منصة Render
 EXPOSE 5000
 ENV ASPNETCORE_URLS=http://+:5000
 
-ENTRYPOINT ["dotnet", "OpenBullet2.Web.dll"]
+ENTRYPOINT ["dotnet", "SilverBullet.Web.dll"]
